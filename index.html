@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Internship Finder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .search-container {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        input, select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            min-width: 200px;
+            font-size: 14px;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #2196F3;
+            box-shadow: 0 0 0 2px rgba(33,150,243,0.25);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #f8f9fa;
+            position: sticky;
+            top: 0;
+            font-weight: 600;
+        }
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+        .result-count {
+            margin-top: 10px;
+            color: #666;
+            font-size: 0.9em;
+        }
+        .chat-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        .chat-toggle button {
+            padding: 12px 24px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 24px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+        .chat-toggle button:hover {
+            background-color: #1976D2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+	<style>
+        /* Chat Container Styles */
+        .chat-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 380px;
+            max-height: 600px;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            background: white;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            display: none;
+        }
+        .chat-header {
+            padding: 15px 20px;
+            background: #2196F3;
+            color: white;
+            border-radius: 12px 12px 0 0;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .chat-close {
+            color: white;
+            cursor: pointer;
+            font-size: 24px;
+            padding: 0 5px;
+            transition: all 0.2s;
+        }
+        .chat-close:hover {
+            opacity: 0.8;
+        }
+        .chat-body {
+            height: 400px;
+            overflow-y: auto;
+            padding: 15px;
+            scroll-behavior: smooth;
+            background-color: #fafafa;
+        }
+        .chat-input {
+            display: flex;
+            padding: 15px;
+            border-top: 1px solid #eee;
+            background: white;
+            border-radius: 0 0 12px 12px;
+        }
+        .chat-input input {
+            flex: 1;
+            margin-right: 10px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            padding: 10px 15px;
+            font-size: 14px;
+        }
+        .chat-input button {
+            padding: 8px 20px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        .chat-input button:hover {
+            background-color: #1976D2;
+            transform: translateY(-1px);
+        }
+        .message {
+            margin: 10px 0;
+            padding: 12px 16px;
+            border-radius: 12px;
+            max-width: 85%;
+            word-wrap: break-word;
+            position: relative;
+            animation: fadeIn 0.3s ease;
+        }
+        .user-message {
+            background: #2196F3;
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 4px;
+        }
+        .bot-message {
+            background: white;
+            color: #333;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .suggestions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .suggestion-chip {
+            background: #e3f2fd;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid #bbdefb;
+            color: #1976D2;
+        }
+        .suggestion-chip:hover {
+            background: #bbdefb;
+            transform: translateY(-1px);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .typing-indicator {
+            padding: 10px;
+            display: flex;
+            gap: 3px;
+        }
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            background: #90caf9;
+            border-radius: 50%;
+            animation: typingAnimation 1.4s infinite;
+            opacity: 0.7;
+        }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typingAnimation {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
+        .chat-container.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+    </style>
+<body>
+<body>
+    <div class="container">
+        <h1>Internship Finder</h1>
+        
+        <div class="search-container">
+            <input 
+                type="text" 
+                id="searchInput" 
+                placeholder="Search internships..."
+                oninput="handleSearch()"
+            >
+            <select id="focusAreaFilter" onchange="handleSearch()">
+                <option value="">All Focus Areas</option>
+            </select>
+            <select id="stateFilter" onchange="handleSearch()">
+                <option value="">All States</option>
+            </select>
+        </div>
+
+        <div id="resultCount" class="result-count"></div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Program</th>
+                    <th>Focus Area</th>
+                    <th>Application Deadline</th>
+                    <th>Start Date</th>
+                    <th>Qualification</th>
+                    <th>State</th>
+                </tr>
+            </thead>
+            <tbody id="resultsBody">
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Chat Toggle Button -->
+    <div class="chat-toggle" id="chatToggle">
+        <button onclick="toggleChat()">
+            Chat with Assistant
+        </button>
+    </div>
+
+    <!-- Chat Interface -->
+    <div class="chat-container" id="chatContainer">
+        <div class="chat-header">
+            <span>Internship Assistant</span>
+            <span class="chat-close" onclick="toggleChat()">×</span>
+        </div>
+        <div class="chat-body" id="chatBody">
+            <div class="message bot-message">
+                Hi! I'm your internship search assistant. I can help you find:
+                <div class="suggestions">
+                    <span class="suggestion-chip" onclick="suggestQuery(this)">Tech internships</span>
+                    <span class="suggestion-chip" onclick="suggestQuery(this)">Finance in NY</span>
+                    <span class="suggestion-chip" onclick="suggestQuery(this)">Summer programs</span>
+                    <span class="suggestion-chip" onclick="suggestQuery(this)">Engineering roles</span>
+                    <span class="suggestion-chip" onclick="suggestQuery(this)">California internships</span>
+                </div>
+            </div>
+        </div>
+        <div class="chat-input">
+            <input 
+                type="text" 
+                id="chatInput" 
+                placeholder="Ask about internships... (e.g., 'tech internships in CA')"
+                onkeypress="handleChatKeyPress(event)"
+            >
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        // Constants will go here in Part 4
+		// Constants and Data Structures
+        const STATES_DATA = {
+            // Full names and abbreviations
+            'new york': 'New York', 'ny': 'New York', 'nyc': 'New York', 'new york city': 'New York',
+            'california': 'California', 'ca': 'California', 'bay area': 'California', 'silicon valley': 'California',
+            'new jersey': 'New Jersey', 'nj': 'New Jersey', 'garden state': 'New Jersey',
+            'texas': 'Texas', 'tx': 'Texas', 'lone star state': 'Texas',
+            'florida': 'Florida', 'fl': 'Florida', 'sunshine state': 'Florida',
+            'illinois': 'Illinois', 'il': 'Illinois', 'chicago': 'Illinois',
+            'pennsylvania': 'Pennsylvania', 'pa': 'Pennsylvania',
+            'massachusetts': 'Massachusetts', 'ma': 'Massachusetts', 'boston': 'Massachusetts',
+            'washington': 'Washington', 'wa': 'Washington', 'seattle': 'Washington',
+            'virginia': 'Virginia', 'va': 'Virginia',
+            'michigan': 'Michigan', 'mi': 'Michigan', 'detroit': 'Michigan',
+            'georgia': 'Georgia', 'ga': 'Georgia', 'atlanta': 'Georgia'
+        };
+
+        const INDUSTRY_DATA = {
+            // Technology
+            'tech': 'Technology',
+            'technology': 'Technology',
+            'software': 'Technology',
+            'programming': 'Computer Science',
+            'coding': 'Computer Science',
+            'computer science': 'Computer Science',
+            'cs': 'Computer Science',
+            'it': 'Technology',
+            'data science': 'Technology',
+            'ai': 'Technology',
+            'artificial intelligence': 'Technology',
+
+            // Engineering
+            'engineering': 'Engineering',
+            'mechanical': 'Engineering',
+            'electrical': 'Engineering',
+            'aerospace': 'Aerospace, Engineering',
+            'civil': 'Engineering',
+
+            // Business and Finance
+            'finance': 'Finance',
+            'banking': 'Finance',
+            'business': 'Business',
+            'consulting': 'Consulting',
+            'marketing': 'Marketing',
+            'sales': 'Business',
+            'accounting': 'Finance',
+
+            // Other Fields
+            'research': 'Research',
+            'science': 'Science',
+            'biotech': 'Biotechnology',
+            'healthcare': 'Healthcare',
+            'medical': 'Healthcare',
+            'media': 'Media',
+            'design': 'Design'
+        };
+
+        // Core Functions
+        function handleSearch() {
+            const searchTerm = document.getElementById('searchInput').value;
+            const focusArea = document.getElementById('focusAreaFilter').value;
+            const state = document.getElementById('stateFilter').value;
+
+            document.getElementById('resultsBody').innerHTML = 
+                '<tr><td colspan="6" style="text-align: center;"><div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></td></tr>';
+
+            fetch(`/search?search=${encodeURIComponent(searchTerm)}&focus_area=${encodeURIComponent(focusArea)}&state=${encodeURIComponent(state)}`)
+                .then(response => response.json())
+                .then(data => displayResults(data))
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('resultsBody').innerHTML = 
+                        '<tr><td colspan="6" style="text-align: center; color: red;">Error loading data. Please try again.</td></tr>';
+                });
+        }
+
+        function loadFilters() {
+            fetch('/filters')
+                .then(response => response.json())
+                .then(data => {
+                    const focusAreaSelect = document.getElementById('focusAreaFilter');
+                    const stateSelect = document.getElementById('stateFilter');
+
+                    focusAreaSelect.innerHTML = '<option value="">All Focus Areas</option>';
+                    stateSelect.innerHTML = '<option value="">All States</option>';
+
+                    data.focus_areas.forEach(area => {
+                        if (area) {
+                            const option = document.createElement('option');
+                            option.value = area;
+                            option.textContent = area;
+                            focusAreaSelect.appendChild(option);
+                        }
+                    });
+
+                    data.states.forEach(state => {
+                        if (state) {
+                            const option = document.createElement('option');
+                            option.value = state;
+                            option.textContent = state;
+                            stateSelect.appendChild(option);
+                        }
+                    });
+                })
+                .catch(error => console.error('Error loading filters:', error));
+        }
+
+        function toggleChat() {
+            const chatContainer = document.getElementById('chatContainer');
+            const chatToggle = document.getElementById('chatToggle');
+            
+            if (chatContainer.style.display === 'none') {
+                chatContainer.style.display = 'block';
+                chatContainer.classList.add('show');
+                chatToggle.style.display = 'none';
+                document.getElementById('chatInput').focus();
+            } else {
+                chatContainer.style.display = 'none';
+                chatContainer.classList.remove('show');
+                chatToggle.style.display = 'block';
+            }
+        }
+
+        function showTypingIndicator() {
+            const typingDiv = document.createElement('div');
+            typingDiv.id = 'typingIndicator';
+            typingDiv.className = 'typing-indicator';
+            typingDiv.innerHTML = `
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            `;
+            document.getElementById('chatBody').appendChild(typingDiv);
+        }
+
+        function hideTypingIndicator() {
+            const indicator = document.getElementById('typingIndicator');
+            if (indicator) indicator.remove();
+        }
+		function processUserMessage(message) {
+            message = message.toLowerCase();
+            addMessageToChat("Let me search for that...", 'bot');
+            showTypingIndicator();
+
+            // Initialize search parameters
+            let searchParams = {
+                state: '',
+                focus_area: '',
+                search: '',
+                start_date: ''
+            };
+
+            // Check for states
+            for (const [key, value] of Object.entries(STATES_DATA)) {
+                if (message.includes(key)) {
+                    searchParams.state = value;
+                    break;
+                }
+            }
+
+            // Check for industries/fields
+            for (const [key, value] of Object.entries(INDUSTRY_DATA)) {
+                if (message.includes(key)) {
+                    searchParams.focus_area = value;
+                    break;
+                }
+            }
+
+            // Check for summer internships
+            if (message.includes('summer')) {
+                searchParams.start_date = 'Summer';
+            }
+
+            // If no specific matches found, use the whole message as a search term
+            if (!searchParams.state && !searchParams.focus_area && !searchParams.start_date) {
+                searchParams.search = message;
+            }
+
+            // Perform the search
+            fetch(`/search?${new URLSearchParams(searchParams)}`)
+                .then(response => response.json())
+                .then(data => {
+                    hideTypingIndicator();
+                    displayResults(data);
+                    
+                    if (data.length > 0) {
+                        let response = `I found ${data.length} internship${data.length === 1 ? '' : 's'}`;
+                        
+                        if (searchParams.state) {
+                            response += ` in ${searchParams.state}`;
+                        }
+                        if (searchParams.focus_area) {
+                            response += ` related to ${searchParams.focus_area}`;
+                        }
+                        if (searchParams.start_date) {
+                            response += ` starting in ${searchParams.start_date}`;
+                        }
+                        
+                        addMessageToChat(response + ". I've updated the table above.", 'bot');
+
+                        if (data.length > 10) {
+                            let suggestions = [];
+                            if (!searchParams.focus_area) suggestions.push('specific field');
+                            if (!searchParams.state) suggestions.push('location');
+                            if (suggestions.length > 0) {
+                                addMessageToChat(`Try specifying a ${suggestions.join(' or ')} to narrow down the results.`, 'bot');
+                            }
+                        }
+                    } else {
+                        addMessageToChat("I couldn't find any internships matching those criteria. Try broadening your search or using different terms.", 'bot');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    hideTypingIndicator();
+                    addMessageToChat("Sorry, I encountered an error while searching. Please try again.", 'bot');
+                });
+        }
+
+        function displayResults(data) {
+            const tbody = document.getElementById('resultsBody');
+            const resultCount = document.getElementById('resultCount');
+            
+            tbody.innerHTML = '';
+
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No results found</td></tr>';
+                resultCount.textContent = 'No results found';
+                return;
+            }
+
+            data.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${escapeHtml(item.Program || '')}</td>
+                    <td>${escapeHtml(item['Focus Area'] || '')}</td>
+                    <td>${escapeHtml(item['Application Deadline'] || '')}</td>
+                    <td>${escapeHtml(item['Program Start Date'] || '')}</td>
+                    <td>${escapeHtml(item['Age/Grade/Qualification'] || '')}</td>
+                    <td>${escapeHtml(item.State || '')}</td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            resultCount.textContent = `Showing ${data.length} results`;
+        }
+
+        function handleChatKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (message) {
+                addMessageToChat(message, 'user');
+                input.value = '';
+                processUserMessage(message);
+            }
+        }
+
+        function addMessageToChat(message, sender) {
+            const chatBody = document.getElementById('chatBody');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message`;
+            messageDiv.textContent = message;
+            chatBody.appendChild(messageDiv);
+            chatBody.scrollTop = chatBody.scrollHeight;
+        }
+
+        function suggestQuery(element) {
+            const query = element.textContent;
+            document.getElementById('chatInput').value = query;
+            sendMessage();
+        }
+
+        function escapeHtml(unsafe) {
+            if (typeof unsafe !== 'string') return '';
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadFilters();
+            handleSearch();
+            document.getElementById('chatContainer').style.display = 'none';
+        });
+    </script>
+</body>
+</html>
